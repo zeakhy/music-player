@@ -1,4 +1,4 @@
-name: Clean APK Build
+name: Stable APK Build
 
 on:
   workflow_dispatch:
@@ -11,30 +11,49 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Python
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Install system deps
+    - name: Install system packages
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk \
-        python3-pip build-essential
+        sudo apt install -y git zip unzip openjdk-17-jdk wget
 
     - name: Install Buildozer
       run: |
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
 
-    - name: Clean everything
+    - name: Install Android SDK (FULL FIX incl. AIDL)
       run: |
-        rm -rf .buildozer
-        rm -rf ~/.buildozer
+        mkdir -p $HOME/android-sdk
+        cd $HOME
+
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip commandlinetools-linux-*.zip -d cmdline-tools
+
+        mkdir -p android-sdk/cmdline-tools/latest
+        mv cmdline-tools/cmdline-tools/* android-sdk/cmdline-tools/latest/
+
+        export ANDROIDSDK=$HOME/android-sdk
+        export PATH=$PATH:$ANDROIDSDK/cmdline-tools/latest/bin
+
+        yes | sdkmanager --licenses || true
+
+        sdkmanager \
+          "platform-tools" \
+          "platforms;android-33" \
+          "build-tools;33.0.2"
 
     - name: Build APK
       run: |
+        export ANDROIDSDK=$HOME/android-sdk
+        export ANDROIDNDK=$HOME/android-ndk
+
         buildozer init || true
+        buildozer android clean
         buildozer -v android debug
 
     - name: Upload APK
