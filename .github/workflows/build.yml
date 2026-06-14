@@ -1,4 +1,4 @@
-name: Build APK
+name: Clean APK Build
 
 on:
   workflow_dispatch:
@@ -11,44 +11,30 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Install system dependencies
+    - name: Install system deps
       run: |
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk \
-        python3-pip autoconf libtool pkg-config \
-        zlib1g-dev libncurses5-dev libncursesw5-dev \
-        libtinfo5 cmake libffi-dev libssl-dev \
-        android-sdk
+        python3-pip build-essential
 
-    - name: Install Python tools
+    - name: Install Buildozer
       run: |
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
 
-    - name: Init buildozer
-      run: buildozer init || true
-
-    - name: Fix Android SDK (AIDL fix included)
+    - name: Clean everything
       run: |
-        export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-        export ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk
-        export ANDROIDAPI=33
-        export ANDROIDMINAPI=21
-
-        yes | sdkmanager --licenses || true || true
-        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" || true
+        rm -rf .buildozer
+        rm -rf ~/.buildozer
 
     - name: Build APK
       run: |
-        export ANDROIDAPI=33
-        export ANDROIDMINAPI=21
-
-        buildozer android clean
+        buildozer init || true
         buildozer -v android debug
 
     - name: Upload APK
