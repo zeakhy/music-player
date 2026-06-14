@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout
@@ -14,9 +14,9 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.10
+        python-version: '3.10'
 
-    - name: Install system deps
+    - name: Install system dependencies
       run: |
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk \
@@ -24,7 +24,7 @@ jobs:
         zlib1g-dev libncurses5-dev libncursesw5-dev \
         libtinfo5 cmake libffi-dev libssl-dev
 
-    - name: Install buildozer
+    - name: Install Python tools
       run: |
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
@@ -33,7 +33,7 @@ jobs:
       run: buildozer init || true
 
     - name: Build APK
-      run: buildozer android debug
+      run: buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
